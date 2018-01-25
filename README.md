@@ -2,7 +2,7 @@
 A Bookmarklet (Favelet) for your browser to simply download lectures from a 'Mediasite' website, that is often used by colleges and universities.
 
 ## "Installation"
-Go to [this website](https://klvn.github.io/MediasiteDownloader/) and drag & drop the button on to your browser's Bookmarks Bar.
+Go to [this website](https://klvn.github.io/MediasiteDownloader/) and drag & drop the button onto your browsers Bookmarks Bar.
 
 Works best with Google Chrome.
 
