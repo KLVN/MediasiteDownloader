@@ -2,6 +2,10 @@
 <head>
   <title>Mediasite Downloader</title>
   <style>
+    body {
+      font-family: "Arial";
+    }
+    
     #wrapper {
       width: 100%;
       height: 100%;
@@ -19,7 +23,6 @@
       padding: 25px 60px;
       margin: 0;
       font-size: 50px;
-      font-family: "Arial";
       line-height: 60px;
       -webkit-border-radius: 3px;
       -moz-border-radius: 3px;
@@ -30,7 +33,6 @@
       background: #fff;
       cursor: alias;
       position: relative;
-
     }
 
     #bmarklet::after {
@@ -40,11 +42,15 @@
       left: 30px;
     }
     
-    p {
-      color: #a3aaae;
-      font-family: "Arial";
+    ol {
+      width: 600px;
+      padding-bottom: 10px;
       font-size: 20px;
-      margin-bottom: 40px;
+      color: #818181;
+    }
+    
+    ol li {
+      padding-bottom: 8px;
     }
   </style>
 </head>
@@ -52,7 +58,14 @@
   <a href="https://github.com/KLVN/MediasiteDownloader" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
   
   <div id="wrapper">
-    <p>Drag this button on to your browser's Bookmarks Bar.</p>
+    <ol start="0">
+      <li>(Mobile devices are not supported)</li>
+      <li>Drag this button onto your browsers Bookmarks Bar</li>
+      <li>Open a Mediasite lecture</li>
+      <li>Click on Bookmarklet</li>
+      <li>(If not already happened, you will be redirected to the same lecture with HTML5 enabled. Then click again on Bookmarklet)</li>
+      <li>Download starts</li>
+    </ol>
 
     <a id="bmarklet" class="button" href="javascript:(function(){document.body.appendChild(document.createElement('script')).src='https://rawgit.com/KLVN/MediasiteDownloader/master/MSBookmarklet.js?'+new Date().getTime();})();">Mediasite DL</a>
   </div>
