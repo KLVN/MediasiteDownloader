@@ -7,10 +7,12 @@ Go to [this website](https://klvn.github.io/MediasiteDownloader/) and drag & dro
 Works best with Google Chrome.
 
 ## Usage
-1. Open a Mediasite lecture
-2. Click on Bookmarklet
-3. (If not already happened, you will be redirected to the same lecture with HTML5 enabled. Then click again on Bookmarklet)
-4. Download starts
+0. (Mobile devices are not supported)
+1. Drag this button onto your browsers Bookmarks Bar
+2. Open a Mediasite lecture
+3. Click on Bookmarklet
+4. A dialog will pop up: Copy the title of the lecture, right-click on the link, "Save as..." and paste in the copied title to rename the file
+5. Download begins
 
 ## Known issues
 * Firefox: Video is opening in browser instead of downloading it.  
