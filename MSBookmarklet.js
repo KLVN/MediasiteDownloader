@@ -1,7 +1,6 @@
 javascript: (function() {
   $.ajax({
-    url:
-        'http://webcast.tu-harburg.de/Mediasite/PlayerService/PlayerService.svc/json/GetPlayerOptions',
+    url: window.location.origin + document.getElementById('ServicePath').innerHTML + '/GetPlayerOptions',
     type: 'POST',
     data: JSON.stringify({
       'getPlayerOptionsRequest': {
