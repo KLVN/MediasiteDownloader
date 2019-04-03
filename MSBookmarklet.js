@@ -13,59 +13,59 @@ javascript: (function () {
     contentType: 'application/json; charset=utf-8',
     dataType: 'json',
     success: function (playerOpts) {
-      $('<style type=\'text/css\'>\
-          .modal-window {position: fixed;\
-            display: flex;\
-            justify-content: center;\
-            align-items: center;\
-            background-color: rgba(0, 0, 0, 0.75);\
-            top: 0;\
-            right: 0;\
-            bottom: 0;\
-            left: 0;\
-            z-index: 999;\
-            opacity: 0;\
-            pointer-events: none;\
-          }\
-          .modal-window:target {\
-            opacity: 1;\
-            pointer-events: auto;\
-          }\
-          .modal-window > div {\
-            width: 400px;\
-            position: absolute;\
-            padding: 3em;\
-            background: #ffffff;\
-            color: #333333;\
-            border-radius: 5px;\
-          }\
-          .modal-window header {\
-            font-weight: bold;\
-          }\
-          .modal-window h1 {\
-            font-size: 150%;\
-            margin: 0 0 15px;\
-            color: #333333;\
-          }\
-          .modal-close {\
-            color: #4c4c4c;\
-            line-height: 35px;\
-            position: absolute;\
-            right: 5px;\
-            text-align: center;\
-            top: 5px;\
-            width: 70px;\
-            text-decoration: none;\
-            border: #4c4c4c;\
-            border-style: solid;\
-            border-radius: 5px;\
-            border-width: 1px;\
-          }\
-          .modal-window > div > ul > li {\
-          margin: 10px 0;\
-          }\
-          </style>')
-        .appendTo('head');
+      $('head').append('<style type=\'text/css\'>\
+      .modal-window {position: fixed;\
+        display: flex;\
+        justify-content: center;\
+        align-items: center;\
+        background-color: rgba(0, 0, 0, 0.75);\
+        top: 0;\
+        right: 0;\
+        bottom: 0;\
+        left: 0;\
+        z-index: 999;\
+        opacity: 0;\
+        pointer-events: none;\
+      }\
+      .modal-window:target {\
+        opacity: 1;\
+        pointer-events: auto;\
+      }\
+      .modal-window > div {\
+        width: 400px;\
+        position: absolute;\
+        padding: 3em;\
+        background: #ffffff;\
+        color: #333333;\
+        border-radius: 5px;\
+      }\
+      .modal-window header {\
+        font-weight: bold;\
+      }\
+      .modal-window h1 {\
+        font-size: 150%;\
+        margin: 0 0 15px;\
+        color: #333333;\
+      }\
+      .modal-close {\
+        color: #4c4c4c;\
+        line-height: 35px;\
+        position: absolute;\
+        right: 5px;\
+        text-align: center;\
+        top: 5px;\
+        width: 70px;\
+        text-decoration: none;\
+        border: #4c4c4c;\
+        border-style: solid;\
+        border-radius: 5px;\
+        border-width: 1px;\
+      }\
+      .modal-window > div > ul > li {\
+      margin: 10px 0;\
+      }\
+      </style>');
+
       if (playerOpts.d.Presentation.PlayStatus != "OnDemand") {
         $('body').append(
           '<div id="open-modal" class="modal-window"> \
