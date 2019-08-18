@@ -1,4 +1,5 @@
 javascript: (function () {
+msbookmarklet = function() {
   $.ajax({
     url: window.location.origin + document.getElementById('ServicePath').innerHTML + '/GetPlayerOptions',
     type: 'POST',
@@ -110,4 +111,13 @@ javascript: (function () {
       location.href = "#open-modal";
     }
   })
+}
+if (!window.jQuery) {
+  var script = document.createElement("script");
+  script.onload = msbookmarklet;
+  script.src = "//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js";
+  document.head.appendChild(script);
+} else {
+  msbookmarklet();
+}
 })()
