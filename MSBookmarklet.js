@@ -32,7 +32,7 @@ javascript: (function () {
         pointer-events: auto;\
       }\
       .modal-window > div {\
-        width: 400px;\
+        width: 450px;\
         position: absolute;\
         padding: 3em;\
         background: #ffffff;\
@@ -64,7 +64,16 @@ javascript: (function () {
       .modal-window > div > ul > li {\
       margin: 10px 0;\
       }\
+      .MSDLthumbnail {\
+        width: 350px;\
+        vertical-align: middle;\
+        margin-bottom: 4px;\
+      }\
       </style>');
+
+      if (document.contains(document.getElementById("open-modal"))) {
+        document.getElementById("open-modal").remove();
+      }
 
       if (playerOpts.d.Presentation.PlayStatus != "OnDemand") {
         $('body').append(
@@ -76,36 +85,36 @@ javascript: (function () {
           </div>');
       } else {
         $('body').append(
-          '<div id="open-modal" class="modal-window"> \
+          '<div id="open-modal" class="modal-window">\
           <div>\
             <a href="#" title="Close" class="modal-close">Close</a>\
-            <ul style="list-style: inside;">\
-              <li>Copy the title: <input type="text" onClick="this.select();" value="' + document.title + '"></li>\
-              <li id="placeholder">\
-              <li>Paste in to rename file correctly and save it</li>\
-              <li>Click <a href="https://klvn.github.io/MediasiteDownloader/" target="_blank">here<a/> for more detailed instructions</li>\
-            </ul>\
+            <div id="MSDLinfo">\
+              <ul style="list-style: outside; !important">\
+                <li>Copy the title: <input type="text" onClick="this.select();" value="' + document.title + '"></li>\
+                <li>Right-click on the thumbnail(s) and choose "Save <span style="font-weight: bold;">link</span> as..."</li>\
+                <div id="MSDLvideos"></div>\
+                <li>Paste in to rename file correctly and save it</li>\
+                <li>Click <a href="https://klvn.github.io/MediasiteDownloader/" target="_blank">here</a> for more detailed instructions</li>\
+              </ul>\
+            </div>\
           </div>\
         </div>');
 
-        var allMediaPresenter = playerOpts.d.Presentation.Streams[1].VideoUrls;
-        for (var i = 0; i < allMediaPresenter.length; i++) {
-          if (allMediaPresenter[i].MediaType == 'MP4') {
-            var presenterMp4Url = allMediaPresenter[i].Location;
-          }
-        }
-
-        if (playerOpts.d.Presentation.Streams[0].StreamType == 5) {
-          var allMediaSlides = playerOpts.d.Presentation.Streams[0].VideoUrls;
-          for (var i = 0; i < allMediaSlides.length; i++) {
-            if (allMediaSlides[i].MediaType == 'MP4') {
-              var slidesMp4Url = allMediaSlides[i].Location;
-              $('#placeholder').replaceWith('<li>Right click on these links <a href=' + presenterMp4Url + ' target="_blank">[Presenter]</a> <a href=' + slidesMp4Url + ' target="_blank">[Slides]</a> and then "Save as..."</a></li>');
+        var allPresentations = playerOpts.d.Presentation.Streams;
+        var videoAvailable = false;
+        for (var i = 0; i < allPresentations.length; i++) {
+          if (allPresentations[i].VideoUrls.length) {
+            for (var j = 0; j < allPresentations[i].VideoUrls.length; j++) {
+              if (allPresentations[i].VideoUrls[j].MediaType == "MP4") {
+                videoAvailable = true;
+                var thumbnail = window.location.origin + allPresentations[i].ThumbnailUrl;
+                var videoUrl = allPresentations[i].VideoUrls[j].Location;
+                document.getElementById("MSDLvideos").innerHTML += "<li><a href='" + videoUrl + "' target='_blank'><img class='MSDLthumbnail' src='" + thumbnail + "'></a></li>";
+              }
             }
           }
-        } else {
-          $('#placeholder').replaceWith('<li><a href=' + presenterMp4Url + ' target="_blank">Right click on this link and then "Save as..."</a></li>');
         }
+        if (!videoAvailable) document.getElementById("MSDLinfo").innerHTML = "<li>Sorry, no video(s) available.</li>";
       }
       location.href = "#open-modal";
     }
