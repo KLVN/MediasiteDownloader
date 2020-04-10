@@ -69,6 +69,11 @@ javascript: (function () {
         vertical-align: middle;\
         margin-bottom: 4px;\
       }\
+      div#MSDLinfo {\
+        max-height: 70vh;\
+        min-height: 5vh;\
+        overflow-y: auto;\
+      }\
       </style>');
 
       if (document.contains(document.getElementById("open-modal"))) {
@@ -105,7 +110,7 @@ javascript: (function () {
         for (var i = 0; i < allPresentations.length; i++) {
           if (allPresentations[i].VideoUrls.length) {
             for (var j = 0; j < allPresentations[i].VideoUrls.length; j++) {
-              if (allPresentations[i].VideoUrls[j].MediaType == "MP4") {
+              if (allPresentations[i].VideoUrls[j].MimeType == "video/mp4") {
                 videoAvailable = true;
                 var thumbnail = window.location.origin + allPresentations[i].ThumbnailUrl;
                 var videoUrl = allPresentations[i].VideoUrls[j].Location;
