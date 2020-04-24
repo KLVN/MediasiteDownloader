@@ -121,6 +121,12 @@ javascript: (function () {
             }
           }
         }
+        if (playerOpts.d.Presentation.VodcastUrl != null) {
+          videoAvailable = true;
+          var thumbnail = window.location.origin + playerOpts.d.Presentation.ThumbnailUrl;
+          var videoUrl = playerOpts.d.Presentation.VodcastUrl;
+          document.getElementById("MSDLvideos").innerHTML += "<li>Vodcast:<br><a href='" + videoUrl + "' target='_blank'><img class='MSDLthumbnail' src='" + thumbnail + "'></a></li>";
+        }
         if (!videoAvailable) document.getElementById("MSDLinfo").innerHTML = "<li>Sorry, no video(s) available.</li>";
       }
       Mediasite.Player.API.pause();
