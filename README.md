@@ -15,6 +15,9 @@ Works best with Google Chrome.
 5. Download begins
 
 ## Known issues
+* Slides are not downloaded.  
+This script can only download video files that are available in  MP4 format. By default Mediasite is taking a "screenshot" every few seconds and stores literally hundreds of images during a lecture. Due to limitiations these images can't be converted into a video stream. However, your lecturer/Mediasite operator can change this setting to have two separate video streams - one for the camera and one for the slides - so you may ask them :)  
+If a _Vodcast_ is available, you can also download it with this script. A _Vodcast_ is one video file that combines multiple sources, like different cameras and slides. Unfortunately, these _Vodcasts_ are pretty rare, although they are the best solution if you want to store files locally IMHO.
 * Firefox: Video is opening in browser instead of downloading it.  
 Due to security reasons it's not possible to download files from cross-origins. You have to download it manually via right-click, "Save as...".
 
