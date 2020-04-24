@@ -14,7 +14,8 @@ javascript: (function () {
     dataType: 'json',
     success: function (playerOpts) {
       $('head').append('<style type=\'text/css\'>\
-      .modal-window {position: fixed;\
+      .modal-window {\
+        position: fixed;\
         display: flex;\
         justify-content: center;\
         align-items: center;\
@@ -92,6 +93,7 @@ javascript: (function () {
         $('body').append(
           '<div id="open-modal" class="modal-window">\
           <div>\
+          <div style="font-size: 20px;line-height: 45px;position: absolute;left: 20px;top: 5px;">MediasiteDownloader (<a href="https://github.com/KLVN/MediasiteDownloader" target="_blank">GitHub</a>)</div>\
             <a href="#" title="Close" class="modal-close">Close</a>\
             <div id="MSDLinfo">\
               <ul style="list-style: outside; !important">\
@@ -121,6 +123,7 @@ javascript: (function () {
         }
         if (!videoAvailable) document.getElementById("MSDLinfo").innerHTML = "<li>Sorry, no video(s) available.</li>";
       }
+      Mediasite.Player.API.pause();
       location.href = "#open-modal";
     }
   })
