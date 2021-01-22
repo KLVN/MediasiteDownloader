@@ -1,4 +1,8 @@
 javascript: (function () {
+  if (document.getElementById("player-iframe")) {
+    alert("MediasiteDownloader: A Mediasite Channel was detected. After you click \"OK\" you will be redirected to the video. Click Play and then again on the MediasiteDownloader bookmark.\nNote: Your browser may block the redirect. Make sure to allow pop-ups for this website.");
+    window.open(document.getElementById("player-iframe").src);
+  }
   $.ajax({
     url: window.location.origin + document.getElementById('ServicePath').innerHTML + '/GetPlayerOptions',
     type: 'POST',
