@@ -1,0 +1,42 @@
+name: Minify Bookmarklet
+
+# Triggers on pushes to master or when manually started
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout master branch
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          token: ${{ secrets.MSDL_TOKEN }}
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run minification
+        run: python minify_bookmarklet.py
+          
+      - name: Commit and push changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          # Stage only the files that should have been modified
+          git add MSBookmarklet.min.js
+          # Only commit if there are any changes, otherwise this action will fail
+          git diff-index --quiet HEAD || git commit -m "Minify Bookmarklet"
+          git push origin master
