@@ -6,7 +6,7 @@ with open('MSBookmarklet.js') as input:
   print('* Opened MSBookmarklet.js')
   try:
     print('* Try removing outer code that is necessary for Bookmarklets but cannot be minified by services.')
-    stripped = re.search('(?s)(?<=javascript: \(function \(\) {).*(?=}\)\(\))',  input.read()).group(0)
+    stripped = re.search('(?s)(?<=javascript: \(\(\) => {).*(?=}\)\(\))',  input.read()).group(0)
   except AttributeError:
     sys.exit('X: Could not remove outer Bookmarklet code.')
 
@@ -19,7 +19,7 @@ with open('MSBookmarklet.js') as input:
     minified = re.sub('\s{2,}', '', minified_w_spaces)
     with open ('MSBookmarklet.min.js', 'w') as output:
       print('* Spaces removed. Now, inserting outer code again and saving to file.')
-      output.writelines('javascript:(function(){{{}}})()'.format(minified))
+      output.writelines('javascript:(()=>{{{}}})()'.format(minified))
       print('* Minification done.')
 
   else:
