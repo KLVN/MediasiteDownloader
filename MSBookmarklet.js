@@ -120,7 +120,7 @@ javascript: (() => {
             <a href="#" title="Close" class="modal-close">Close</a>\
             <div id="MSDLinfo">\
               <ul style="list-style: outside; !important">\
-                <li>Copy the title:<br><input type="text" onClick="this.select();" value="' + document.title + '" class="MSDLtitle-input"></li>\
+                <li>Copy the title:<br><input type="text" onClick="this.select();" value="' + document.title.replace(/[\\/:*?"<>|]/g, '-') + '" class="MSDLtitle-input"></li>\
                 <li>Right-click on the thumbnail(s) and choose "Save <span style="font-weight: bold;">link</span> as..."</li>\
                 <div id="MSDLvideos"></div>\
                 <li>Paste in to rename file correctly and save it</li>\
