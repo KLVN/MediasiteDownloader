@@ -1,14 +1,171 @@
 javascript: (() => {
-  // In case a Mediasite Channel was detected (usually that is just the player embedded into another site),
-  // show an alert and redirect to the site with just the player
+  /* In case a Mediasite Channel was detected (usually that is just the player embedded into another site),
+     show an alert and redirect to the site with just the player */
   if (document.getElementById("player-iframe")) {
     alert("MediasiteDownloader: A Mediasite Channel was detected. After you click \"OK\" you will be redirected to the video. Click Play and then again on the MediasiteDownloader bookmark.\nNote: Your browser may block the redirect. Make sure to allow pop-ups for this website.");
     window.open(document.getElementById("player-iframe").src);
   }
 
-  // If 'MediasitePlayer' does not exist, we are still running an older version of Mediasite
-  if(typeof MediasitePlayer !== 'object') {
-    // Grab service path and resource ID and make POST request to get data about current video
+  /* Insert custom CSS for modal */
+  function injectStyles() {
+    document.head.insertAdjacentHTML("beforeend", '<style>\
+    .modal-window {\
+      position: fixed;\
+      display: flex;\
+      justify-content: center;\
+      align-items: center;\
+      background-color: rgba(0, 0, 0, 0.6);\
+      backdrop-filter: blur(4px);\
+      top: 0;\
+      right: 0;\
+      bottom: 0;\
+      left: 0;\
+      z-index: 999;\
+      opacity: 0;\
+      pointer-events: none;\
+      font-family: Arial, Helvetica, sans-serif !important;\
+    }\
+    .modal-window:target {\
+      opacity: 1;\
+      pointer-events: auto;\
+    }\
+    .modal-window > div {\
+      width: 480px;\
+      position: absolute;\
+      padding: 2em 2.5em;\
+      background: #ffffff;\
+      color: #333333;\
+      border-radius: 10px;\
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);\
+    }\
+    .modal-close {\
+      color: #666;\
+      font-size: 14px;\
+      line-height: 32px;\
+      position: absolute;\
+      right: 12px;\
+      text-align: center;\
+      top: 12px;\
+      width: 64px;\
+      text-decoration: none;\
+      border: 1px solid #ccc;\
+      border-radius: 6px;\
+      transition: background 0.2s, border-color 0.2s;\
+    }\
+    .modal-close:hover {\
+      background: #f0f0f0;\
+      border-color: #999;\
+    }\
+    .modal-window > div > ul > li,\
+    .modal-window #MSDLinfo ul > li {\
+      margin: 5px 0 !important;\
+      padding: 0 !important;\
+      line-height: 1.5 !important;\
+    }\
+    .MSDLthumbnail {\
+      width: 350px;\
+      vertical-align: middle;\
+      margin-bottom: 4px;\
+      border-radius: 4px;\
+    }\
+    div#MSDLinfo {\
+      max-height: 70vh;\
+      min-height: 5vh;\
+      overflow-y: auto;\
+    }\
+    .MSDLtitle-input {\
+      width: 100%;\
+      box-sizing: border-box;\
+      padding: 6px 8px;\
+      margin-top: 4px;\
+      border: 1px solid #ccc;\
+      border-radius: 4px;\
+      font-family: Arial, Helvetica, sans-serif !important;\
+      font-size: 14px;\
+      background-color: #fff;\
+    }\
+    .MSDLtitle-input:focus {\
+      outline: none;\
+      border-color: #666;\
+    }\
+    </style>');
+  }
+
+  function buildModal(playerOptions, pausePlayerFunction) {
+    const presentation = playerOptions.d.Presentation;
+
+    injectStyles();
+
+    if (document.contains(document.getElementById("open-modal"))) {
+      document.getElementById("open-modal").remove();
+    }
+
+    /* If video is NOT on demand, it is probably a livestream that cannot be downloaded yet */
+    if (presentation.PlayStatus !== "OnDemand") {
+      document.body.insertAdjacentHTML("beforeend",
+          '<div id="open-modal" class="modal-window"> \
+            <div>\
+              <a href="#" title="Close" class="modal-close">Close</a>\
+              <p style="font-size: 16px; line-height: 1.5;">Lecture is currently not available on-demand and therefore cannot be downloaded.<br>Try again later.</p>\
+            </div>\
+          </div>');
+      return;
+    }
+
+    /* Otherwise video is available on demand, create modal that will be populated later on */
+    document.body.insertAdjacentHTML("beforeend",
+        '<div id="open-modal" class="modal-window">\
+          <div>\
+          <div style="font-size: 18px;line-height: 45px;position: absolute;left: 20px;top: 8px;">MediasiteDownloader (<a href="https://github.com/KLVN/MediasiteDownloader" target="_blank" style="color: #0066cc;">GitHub</a>)</div>\
+            <a href="#" title="Close" class="modal-close">Close</a>\
+            <div id="MSDLinfo">\
+              <ul style="list-style: outside; !important">\
+                <li>Copy the title:<br><input type="text" onClick="this.select();" value="' + document.title + '" class="MSDLtitle-input"></li>\
+                <li>Right-click on the thumbnail(s) and choose "Save <span style="font-weight: bold;">link</span> as..."</li>\
+                <div id="MSDLvideos"></div>\
+                <li>Paste in to rename file correctly and save it</li>\
+                <li>Click <a href="https://klvn.github.io/MediasiteDownloader/" target="_blank">here</a> for more detailed instructions</li>\
+              </ul>\
+            </div>\
+          </div>\
+        </div>');
+
+    const origin = window.location.origin;
+    const videosContainer = document.getElementById("MSDLvideos");
+    let videosHtml = "";
+
+    /* Go through all video streams and only keep MP4 files */
+    presentation.Streams
+      .flatMap((stream) => stream.VideoUrls
+        .filter((url) => url.MimeType === "video/mp4")
+        .map((url) => ({ thumbnail: origin + stream.ThumbnailUrl, videoUrl: url.Location }))
+      )
+      .forEach(({ thumbnail, videoUrl }) => {
+        videosHtml += "<li><a href='" + videoUrl + "' target='_blank'><img class='MSDLthumbnail' src='" + thumbnail + "' alt='Video stream thumbnail'></a></li>";
+      });
+
+    /* Vodcasts are easier to deal with, so if it is one then just grab the URL for downloading */
+    if (presentation.VodcastUrl != null) {
+      videosHtml += "<li>Vodcast:<br><a href='" + presentation.VodcastUrl + "' target='_blank'><img class='MSDLthumbnail' src='" + origin + presentation.ThumbnailUrl + "' alt='Vodcast thumbnail'></a></li>";
+    }
+
+    if (videosHtml) {
+      videosContainer.innerHTML = videosHtml;
+    } else {
+      /* No downloadable MP4 file was found */
+      document.getElementById("MSDLinfo").innerHTML = "<li>Sorry, no video(s) available.</li>";
+    }
+
+    /* Pause player so it does not continue to run in the background */
+    pausePlayerFunction();
+
+    /* Open modal */
+    location.href = "#open-modal";
+  }
+
+  /* If 'MediasitePlayer' does not exist, we are still running an older version (< 2022) of Mediasite.
+     Grab service path and resource ID and make POST request to get data about current video. */
+  function handleOldMediasite() {
     fetch(window.location.origin + document.getElementById('ServicePath').innerHTML + '/GetPlayerOptions', {
       method: 'POST',
       headers: {
@@ -24,143 +181,15 @@ javascript: (() => {
       })
     })
     .then((response) => response.json())
-    .then((playerOpts) => {
-      // Insert custom CSS for modal
-      document.head.insertAdjacentHTML("beforeend", '<style type=\'text/css\'>\
-      .modal-window {\
-        position: fixed;\
-        display: flex;\
-        justify-content: center;\
-        align-items: center;\
-        background-color: rgba(0, 0, 0, 0.75);\
-        top: 0;\
-        right: 0;\
-        bottom: 0;\
-        left: 0;\
-        z-index: 999;\
-        opacity: 0;\
-        pointer-events: none;\
-      }\
-      .modal-window:target {\
-        opacity: 1;\
-        pointer-events: auto;\
-      }\
-      .modal-window > div {\
-        width: 450px;\
-        position: absolute;\
-        padding: 3em;\
-        background: #ffffff;\
-        color: #333333;\
-        border-radius: 5px;\
-      }\
-      .modal-window header {\
-        font-weight: bold;\
-      }\
-      .modal-window h1 {\
-        font-size: 150%;\
-        margin: 0 0 15px;\
-        color: #333333;\
-      }\
-      .modal-close {\
-        color: #4c4c4c;\
-        line-height: 35px;\
-        position: absolute;\
-        right: 5px;\
-        text-align: center;\
-        top: 5px;\
-        width: 70px;\
-        text-decoration: none;\
-        border: #4c4c4c;\
-        border-style: solid;\
-        border-radius: 5px;\
-        border-width: 1px;\
-      }\
-      .modal-window > div > ul > li {\
-      margin: 10px 0;\
-      }\
-      .MSDLthumbnail {\
-        width: 350px;\
-        vertical-align: middle;\
-        margin-bottom: 4px;\
-      }\
-      div#MSDLinfo {\
-        max-height: 70vh;\
-        min-height: 5vh;\
-        overflow-y: auto;\
-      }\
-      </style>');
+    .then((playerOptions) => {
+      console.log(playerOptions);
+      buildModal(playerOptions, () => Mediasite.Player.API.pause());
+    });
+  }
 
-      // If modal was already inserted, remove it
-      if (document.contains(document.getElementById("open-modal"))) {
-        document.getElementById("open-modal").remove();
-      }
-
-      // If video is NOT on demand, it is probably a livestream that cannot be downloaded yet
-      if (playerOpts.d.Presentation.PlayStatus != "OnDemand") {
-        document.body.insertAdjacentHTML("beforeend", 
-          '<div id="open-modal" class="modal-window"> \
-            <div>\
-              <a href="#" title="Close" class="modal-close">Close</a>\
-              <p style="font-size: 20px;">Lecture is currently not available on-demand and therefore cannot be downloaded.<br>Try again later.</p>\
-            </div>\
-          </div>');
-      } else {
-      // If video is available on demand, create modal that will be populated later on
-        document.body.insertAdjacentHTML("beforeend", 
-          '<div id="open-modal" class="modal-window">\
-            <div>\
-            <div style="font-size: 20px;line-height: 45px;position: absolute;left: 20px;top: 5px;">MediasiteDownloader (<a href="https://github.com/KLVN/MediasiteDownloader" target="_blank">GitHub</a>)</div>\
-              <a href="#" title="Close" class="modal-close">Close</a>\
-              <div id="MSDLinfo">\
-                <ul style="list-style: outside; !important">\
-                  <li>Copy the title: <input type="text" onClick="this.select();" value="' + document.title + '"></li>\
-                  <li>Right-click on the thumbnail(s) and choose "Save <span style="font-weight: bold;">link</span> as..."</li>\
-                  <div id="MSDLvideos"></div>\
-                  <li>Paste in to rename file correctly and save it</li>\
-                  <li>Click <a href="https://klvn.github.io/MediasiteDownloader/" target="_blank">here</a> for more detailed instructions</li>\
-                </ul>\
-              </div>\
-            </div>\
-          </div>');
-
-        // Grab all video streams
-        var allPresentations = playerOpts.d.Presentation.Streams;
-        // Just a flag to record if any video is available
-        var videoAvailable = false;
-        // Go through all video streams
-        for (var i = 0; i < allPresentations.length; i++) {
-          if (allPresentations[i].VideoUrls.length) {
-            for (var j = 0; j < allPresentations[i].VideoUrls.length; j++) {
-              // Only look for MP4 files
-              if (allPresentations[i].VideoUrls[j].MimeType == "video/mp4") {
-                // Set flag because there is at least one MP4 file
-                videoAvailable = true;
-                var thumbnail = window.location.origin + allPresentations[i].ThumbnailUrl;
-                var videoUrl = allPresentations[i].VideoUrls[j].Location;
-                // Populate modal that lists all downloadable video streams
-                document.getElementById("MSDLvideos").innerHTML += "<li><a href='" + videoUrl + "' target='_blank'><img class='MSDLthumbnail' src='" + thumbnail + "'></a></li>";
-              }
-            }
-          }
-        }
-        // Vodcasts are easier to deal with, so if it is one then just grab the URL for downloading
-        if (playerOpts.d.Presentation.VodcastUrl != null) {
-          videoAvailable = true;
-          var thumbnail = window.location.origin + playerOpts.d.Presentation.ThumbnailUrl;
-          var videoUrl = playerOpts.d.Presentation.VodcastUrl;
-          document.getElementById("MSDLvideos").innerHTML += "<li>Vodcast:<br><a href='" + videoUrl + "' target='_blank'><img class='MSDLthumbnail' src='" + thumbnail + "'></a></li>";
-        }
-        // If flag was not set, no downloadable MP4 file was found
-        if (!videoAvailable) document.getElementById("MSDLinfo").innerHTML = "<li>Sorry, no video(s) available.</li>";
-      }
-      // Pause player so it does not continue to run in the background
-      Mediasite.Player.API.pause();
-      // Open modal
-      location.href = "#open-modal";
-    })
-  // If 'MediasitePlayer' does exist, we are running a newer version (2022) of Mediasite
-  // and have to use a few different variables. But essentially it is the same process.
-  } else {
+  /* If 'MediasitePlayer' does exist, we are running a newer version (>= 2022) of Mediasite
+     and have to use a few different variables. But essentially it is the same process. */
+  function handleNewMediasite() {
     fetch(window.location.origin + SiteData.PlayerService + '/GetPlayerOptions', {
       method: 'POST',
       headers: {
@@ -176,125 +205,16 @@ javascript: (() => {
       })
     })
     .then((response) => response.json())
-    .then((playerOpts) => {
-      document.head.insertAdjacentHTML("beforeend", '<style type=\'text/css\'>\
-      .modal-window {\
-        position: fixed;\
-        display: flex;\
-        justify-content: center;\
-        align-items: center;\
-        background-color: rgba(0, 0, 0, 0.75);\
-        top: 0;\
-        right: 0;\
-        bottom: 0;\
-        left: 0;\
-        z-index: 999;\
-        opacity: 0;\
-        pointer-events: none;\
-      }\
-      .modal-window:target {\
-        opacity: 1;\
-        pointer-events: auto;\
-      }\
-      .modal-window > div {\
-        width: 450px;\
-        position: absolute;\
-        padding: 3em;\
-        background: #ffffff;\
-        color: #333333;\
-        border-radius: 5px;\
-      }\
-      .modal-window header {\
-        font-weight: bold;\
-      }\
-      .modal-window h1 {\
-        font-size: 150%;\
-        margin: 0 0 15px;\
-        color: #333333;\
-      }\
-      .modal-close {\
-        color: #4c4c4c;\
-        line-height: 35px;\
-        position: absolute;\
-        right: 5px;\
-        text-align: center;\
-        top: 5px;\
-        width: 70px;\
-        text-decoration: none;\
-        border: #4c4c4c;\
-        border-style: solid;\
-        border-radius: 5px;\
-        border-width: 1px;\
-      }\
-      .modal-window > div > ul > li {\
-      margin: 10px 0;\
-      }\
-      .MSDLthumbnail {\
-        width: 350px;\
-        vertical-align: middle;\
-        margin-bottom: 4px;\
-      }\
-      div#MSDLinfo {\
-        max-height: 70vh;\
-        min-height: 5vh;\
-        overflow-y: auto;\
-      }\
-      </style>');
-  
-      if (document.contains(document.getElementById("open-modal"))) {
-        document.getElementById("open-modal").remove();
-      }
-  
-      if (playerOpts.d.Presentation.PlayStatus != "OnDemand") {
-       document.body.insertAdjacentHTML("beforeend", 
-          '<div id="open-modal" class="modal-window"> \
-            <div>\
-              <a href="#" title="Close" class="modal-close">Close</a>\
-              <p style="font-size: 20px;">Lecture is currently not available on-demand and therefore cannot be downloaded.<br>Try again later.</p>\
-            </div>\
-          </div>');
-      } else {
-       document.body.insertAdjacentHTML("beforeend", 
-          '<div id="open-modal" class="modal-window">\
-          <div>\
-          <div style="font-size: 20px;line-height: 45px;position: absolute;left: 20px;top: 5px;">MediasiteDownloader (<a href="https://github.com/KLVN/MediasiteDownloader" target="_blank">GitHub</a>)</div>\
-            <a href="#" title="Close" class="modal-close">Close</a>\
-            <div id="MSDLinfo">\
-              <ul style="list-style: outside; !important">\
-                <li>Copy the title: <input type="text" onClick="this.select();" value="' + document.title + '" style="background-color: #FFF"></li>\
-                <li>Right-click on the thumbnail(s) and choose "Save <span style="font-weight: bold;">link</span> as..."</li>\
-                <div id="MSDLvideos"></div>\
-                <li>Paste in to rename file correctly and save it</li>\
-                <li>Click <a href="https://klvn.github.io/MediasiteDownloader/" target="_blank">here</a> for more detailed instructions</li>\
-              </ul>\
-            </div>\
-          </div>\
-        </div>');
-  
-        var allPresentations = playerOpts.d.Presentation.Streams;
-        var videoAvailable = false;
-        for (var i = 0; i < allPresentations.length; i++) {
-          if (allPresentations[i].VideoUrls.length) {
-            for (var j = 0; j < allPresentations[i].VideoUrls.length; j++) {
-              if (allPresentations[i].VideoUrls[j].MimeType == "video/mp4") {
-                videoAvailable = true;
-                var thumbnail = window.location.origin + allPresentations[i].ThumbnailUrl;
-                var videoUrl = allPresentations[i].VideoUrls[j].Location;
-                document.getElementById("MSDLvideos").innerHTML += "<li><a href='" + videoUrl + "' target='_blank'><img class='MSDLthumbnail' src='" + thumbnail + "'></a></li>";
-              }
-            }
-          }
-        }
-        if (playerOpts.d.Presentation.VodcastUrl != null) {
-          videoAvailable = true;
-          var thumbnail = window.location.origin + playerOpts.d.Presentation.ThumbnailUrl;
-          var videoUrl = playerOpts.d.Presentation.VodcastUrl;
-          document.getElementById("MSDLvideos").innerHTML += "<li>Vodcast:<br><a href='" + videoUrl + "' target='_blank'><img class='MSDLthumbnail' src='" + thumbnail + "'></a></li>";
-        }
-        if (!videoAvailable) document.getElementById("MSDLinfo").innerHTML = "<li>Sorry, no video(s) available.</li>";
-      }
-      MediasitePlayer.pause();
-      location.href = "#open-modal";
-    })
+    .then((playerOptions) => {
+      console.log(playerOptions);
+      buildModal(playerOptions, () => MediasitePlayer.pause());
+    });
+  }
+
+  /* If 'MediasitePlayer' does not exist, we are still running an older version */
+  if (typeof MediasitePlayer !== 'object') {
+    handleOldMediasite();
+  } else {
+    handleNewMediasite();
   }
 })()
